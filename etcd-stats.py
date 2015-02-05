@@ -1,0 +1,124 @@
+#!/usr/bin/env python
+"""
+Zabbix Monitoring template for etcd node stats.
+
+Example:
+$ ./etcd-stats.py --url http://localhost:4001 --metric 'self.recvAppendRequestCnt'
+
+Copyright 2015 Alex Simenduev <shamil.si@gmail.com>
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+import json
+import os
+import urllib2
+import time
+
+from base64 import b16encode
+from optparse import OptionParser
+from sys import exit, stderr
+
+stats_cache_file_tmpl = '/tmp/zbx_etcd_stats_{type}_{url}.txt'
+
+def get_stats(url, stats, timeout=60):
+    '''Get the specified stats from the etcd (or from cached data) and return JSON.'''
+
+    # generate path for cache file
+    global stats_cache_file_tmpl
+    cache_file = stats_cache_file_tmpl.format(type=stats, url=b16encode(url))
+
+    # get the age of the cache file
+    if os.path.exists(cache_file):
+        cache_age = int(time.time() - os.path.getmtime(cache_file))
+    else:
+        cache_age = timeout
+
+    # read stats from cache if it's still valid
+    if cache_age < timeout:
+        with open(cache_file, 'r') as c:
+            raw_json = c.read()
+
+    # if not get, get the fresh stats from the etcd server
+    else:
+        try:
+            raw_json = urllib2.urlopen('%s/v2/stats/%s' % (url, stats)).read()
+        except (urllib2.URLError, ValueError) as e:
+            print >> stderr, '%s (%s)' % (e, url)
+            return None
+
+        try:
+            # save the contents to cache_file
+            cache_file_tmp = open(cache_file + '.tmp', "w")
+            cache_file_tmp.write(raw_json)
+            cache_file_tmp.flush()
+            cache_file_tmp.close()
+            os.rename(cache_file + '.tmp', cache_file)
+        except:
+            pass
+
+    # finally return the parsed response
+    try:
+        response = json.loads(raw_json)
+    except Exception as e:  # improve this...
+        print >> stderr, e
+        return None
+
+    return response
+
+def get_metric(url, metric, timeout=60):
+    parsed_metric = metric.split(':')
+
+    if len(parsed_metric) != 2:
+        print >> stderr, "Wrong metric syntax (%s)" % metric
+        return None
+
+    mtype  = parsed_metric[0].lower()
+    mlookup = parsed_metric[1].split('/')
+
+    # get fresh stats
+    stats = get_stats(url, mtype, timeout)
+    if type(stats) is not dict:
+        return None
+
+    # leaders can't have counts/latency metrics,
+    # return -1 if stats for leader were requested
+    if mtype == 'leader':
+        h = mlookup[1]
+        l = stats['leader']
+        if h == l:
+            return None
+
+    # get metric value and return it
+    return reduce(lambda parent, child: parent.get(child, None), mlookup, stats)
+
+if __name__ == "__main__":
+    parser = OptionParser(usage='usage: %prog --metric <type:metric> [--url http://localhost:4001] [--timeout 60]')
+    parser.add_option("--metric",  dest="metric")
+    parser.add_option("--timeout", dest="timeout", default=60, type="int")
+    parser.add_option("--url",     dest="url",     default="http://localhost:4001")
+
+    options, args = parser.parse_args()
+
+    if not options.metric:
+        parser.error('Metric (--metric) must be provided')
+    elif options.metric.endswith(".RAW"):
+        result = get_stats(options.url, options.metric.split(':')[0], options.timeout)
+        result = json.dumps(result, sort_keys=True, indent=4) if result else None
+    else:
+        result = get_metric(options.url, options.metric, options.timeout)
+
+    if result is not None:
+        print result
+    else:
+        print "ZBX_NOTSUPPORTED"
+        exit(1)
