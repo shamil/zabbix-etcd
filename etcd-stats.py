@@ -2,8 +2,10 @@
 """
 Zabbix Monitoring template for etcd node stats.
 
-Example:
-$ ./etcd-stats.py --url http://localhost:4001 --metric 'self.recvAppendRequestCnt'
+Examples:
+$ ./etcd-stats.py --metric leader:followers/node.domain.tld/counts/fail
+$ ./etcd-stats.py --metric self:recvAppendRequestCnt
+$ ./etcd-stats.py --metric store:watchers
 
 Copyright 2015 Alex Simenduev <shamil.si@gmail.com>
 
@@ -76,6 +78,8 @@ def get_stats(url, stats, timeout=60):
     return response
 
 def get_metric(url, metric, timeout=60):
+    '''Get the specified metric from the stats dict and return it's value.'''
+
     parsed_metric = metric.split(':')
 
     if len(parsed_metric) != 2:

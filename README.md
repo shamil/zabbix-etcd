@@ -3,6 +3,8 @@ zabbix-etcd
 
 Zabbix monitoring template for [ETCD](https://github.com/coreos/etcd)
 
+![zabbix items](https://raw.githubusercontent.com/shamil/zabbix-etcd/master/screenshot.png)
+
 **How to install**
 
 - put the `etcd-stats.py` in you zabbix `libexec` dir (I use `/usr/local/libexec/zabbix`)
@@ -49,9 +51,7 @@ Zabbix monitoring template for [ETCD](https://github.com/coreos/etcd)
 
     etcd.follower[counts,fail]
     etcd.follower[counts,success]
-    etcd.follower[latency,average]
     etcd.follower[latency,current]
-    etcd.follower[latency,standardDeviation]
 
 **License**
 
