@@ -36,7 +36,6 @@ def get_stats(url, stats, timeout=60):
     '''Get the specified stats from the etcd (or from cached data) and return JSON.'''
 
     # generate path for cache file
-    global stats_cache_file_tmpl
     cache_file = stats_cache_file_tmpl.format(type=stats, url=b16encode(url))
 
     # get the age of the cache file
@@ -108,7 +107,7 @@ def get_metric(url, metric, timeout=60):
 if __name__ == "__main__":
     parser = OptionParser(usage='usage: %prog --metric <type:metric> [--url http://localhost:4001] [--timeout 60]')
     parser.add_option("--metric",  dest="metric")
-    parser.add_option("--timeout", dest="timeout", default=60, type="int")
+    parser.add_option("--timeout", dest="timeout", default=30, type="int")
     parser.add_option("--url",     dest="url",     default="http://localhost:4001")
 
     options, args = parser.parse_args()
