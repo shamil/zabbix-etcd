@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>2.0</version>
-    <date>2015-02-09T09:19:48Z</date>
+    <date>2015-02-21T23:59:01Z</date>
     <groups>
         <group>
             <name>Templates</name>
@@ -539,7 +539,7 @@
                     <logtimefmt/>
                 </item>
                 <item>
-                    <name>Etcd follower: fail</name>
+                    <name>Etcd follower: failed raft requests</name>
                     <type>0</type>
                     <snmp_community/>
                     <multiplier>0</multiplier>
@@ -582,7 +582,7 @@
                     <logtimefmt/>
                 </item>
                 <item>
-                    <name>Etcd follower: latency current</name>
+                    <name>Etcd follower: latency to leader</name>
                     <type>0</type>
                     <snmp_community/>
                     <multiplier>0</multiplier>
@@ -594,7 +594,7 @@
                     <status>0</status>
                     <value_type>0</value_type>
                     <allowed_hosts/>
-                    <units/>
+                    <units>ms</units>
                     <delta>0</delta>
                     <snmpv3_contextname/>
                     <snmpv3_securityname/>
@@ -625,7 +625,7 @@
                     <logtimefmt/>
                 </item>
                 <item>
-                    <name>Etcd follower: success</name>
+                    <name>Etcd follower: successful raft requests</name>
                     <type>0</type>
                     <snmp_community/>
                     <multiplier>0</multiplier>
@@ -1042,7 +1042,7 @@
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{Template_ETCD:etcd.follower[latency,current].avg(600)}&gt;3</expression>
+            <expression>{Template_ETCD:etcd.follower[latency,current].avg(600)}&gt;1000</expression>
             <name>Latency to leader</name>
             <url/>
             <status>0</status>
