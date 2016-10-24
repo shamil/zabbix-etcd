@@ -105,10 +105,10 @@ def get_metric(url, metric, timeout=60):
     return reduce(lambda parent, child: parent.get(child, None), mlookup, stats)
 
 if __name__ == "__main__":
-    parser = OptionParser(usage='usage: %prog --metric <type:metric> [--url http://localhost:4001] [--timeout 60]')
+    parser = OptionParser(usage='usage: %prog --metric <type:metric> [--url http://localhost:2379] [--timeout 60]')
     parser.add_option("--metric",  dest="metric")
     parser.add_option("--timeout", dest="timeout", default=30, type="int")
-    parser.add_option("--url",     dest="url",     default="http://localhost:4001")
+    parser.add_option("--url",     dest="url",     default="http://localhost:2379")
 
     options, args = parser.parse_args()
 
